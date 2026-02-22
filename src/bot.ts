@@ -1,11 +1,11 @@
-import { Telegraf, Context } from "telegraf";
+import { Telegraf } from "telegraf";
 import { config } from "./config";
 
 // Инициализация бота
 const bot = new Telegraf(config.botToken);
 
 // Обработка команды /start
-bot.start((ctx: Context) => {
+bot.start((ctx) => {
   const welcomeMessage = `
 👋 Добро пожаловать в наш бот!
 
@@ -22,7 +22,7 @@ bot.start((ctx: Context) => {
 });
 
 // Обработка команды /help
-bot.command("help", (ctx: Context) => {
+bot.command("help", (ctx) => {
   ctx.reply(
     `ℹ️ Справка:\n\n` +
       `1. Напишите любое сообщение\n` +
@@ -107,7 +107,7 @@ ${caption}
 });
 
 // Обработка команды /cancel
-bot.command("cancel", (ctx: Context) => {
+bot.command("cancel", (ctx) => {
   ctx.reply(`❌ Операция отменена.`);
 });
 
