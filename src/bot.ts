@@ -16,7 +16,6 @@ bot.start((ctx) => {
 Доступные команды:
 /start - показать это сообщение
 /help - справка
-/cancel - отменить операцию
   `;
   ctx.reply(welcomeMessage);
 });
