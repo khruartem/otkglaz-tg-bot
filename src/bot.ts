@@ -100,6 +100,11 @@ ${caption}
     });
 
     ctx.reply(`✅ Фото успешно отправлено администратору!`);
+
+    console.log(
+      `✅ Сообщение с фото от ${userName} (ID: ${userId}) успешно отправлено`,
+    );
+
   } catch (error) {
     console.error("❌ Ошибка при отправке фото:", error);
     ctx.reply(`❌ Ошибка при отправке фото. Пожалуйста, попробуйте позже.`);
@@ -107,9 +112,9 @@ ${caption}
 });
 
 // Обработка команды /cancel
-bot.command("cancel", (ctx) => {
-  ctx.reply(`❌ Операция отменена.`);
-});
+// bot.command("cancel", (ctx) => {
+//   ctx.reply(`❌ Операция отменена.`);
+// });
 
 // Обработка ошибок
 bot.catch((err: any) => {
