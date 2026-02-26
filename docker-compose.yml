@@ -4,7 +4,7 @@ services:
   bot:
     build: .
     environment:
-      - BOT_TOKEN=${BOT_TOKEN}
+      - BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
     env_file:
       - .env
     restart: unless-stopped
