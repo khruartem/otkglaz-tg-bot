@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ${APPLICATION_NAME}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ${APPLICATION_NAME}
+  template:
+    metadata:
+      labels:
+        app: ${APPLICATION_NAME}
+    spec:
+      containers:
+      - name: ${APPLICATION_NAME}
+        image: ${REGISTRY}/${REGISTRY_REPOSITORY}/${APPLICATION_NAME}:${VERSION}
+        resources:
+          requests:
+            cpu: '250m'
+            memory: '256Mi'
+          limits:
+            cpu: '500m'
+            memory: '512Mi'
+        envFrom:
+          - configMapRef:
+            name: ${APPLICATION_NAME}-config
+        env:
+          - name: secret_property
+            valueFrom:
+              secretKeyRef:
+                name: ${APPLICATION_NAME}-${NAMESPACE}
+                key: secret_property
+        ports:
+        - containerPort: 8080

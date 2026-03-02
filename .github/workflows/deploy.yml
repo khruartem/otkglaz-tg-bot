@@ -1,0 +1,86 @@
+---
+name: Ручная публикация сервиса
+on:
+  workflow_dispatch:
+    inputs:
+      kube-namespace:
+        description: Namespace для публикации сервиса
+        required: true
+        type: string
+      application-name:
+        description: Имя сервиса
+        required: true
+        type: string
+      deploy-version:
+        description: Версия образа
+        required: true
+        type: string
+      custom_message:
+        description: Комментарий к запуску
+        required: false
+        type: string
+      deploy-timeout:
+        description: Время ожидания деплоя приложения
+        required: false
+        default: "300"
+      gpg-passphase:
+        description: Пароль расшифровки файла с секретами
+        required: false
+        type: string
+        default: ""
+jobs:
+  manual-job:
+    runs-on: ubuntu-latest
+  steps:
+    - name: Check out the repo
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ github.ref }}
+        fetch-depth: 0
+    - name: setup environment
+      shell: bash
+      run: >
+        echo "APPLICATION_NAME=${{ inputs.application-name }}" >> $GITHUB_ENV
+        echo "VERSION=${{ inputs.deploy-version }}" >> $GITHUB_ENV
+        echo "NAMESPACE=${{ inputs.kube-namespace }}" >> $GITHUB_ENV
+        echo "REGISTRY=${{ vars.REGISTRY }}" >> $GITHUB_ENV
+        echo "REGISTRY_REPOSITORY=${{ vars.REGISTRY_REPOSITORY }}" >> $GITHUB_ENV
+    - name: Generate Kubernetes manifest
+      shell: bash
+      run: |
+        envsubst < kubernetes/deployment.yaml > deployment.yaml
+        envsubst < kubernetes/service.yaml > service.yaml
+    - name: Configure Kubernetes access
+      uses: azure/k8s-set-context@v3
+      with:
+        kubeconfig: ${{ secrets.KUBE_CONFIG }}
+    - name: Update config
+      shell: bash
+      id: update-config
+      run: >
+        kubectl -n ${{ inputs.kube-namespace }} delete configmap ${{
+        inputs.application-name }}-config --ignore-not-found
+        kubectl -n ${{ inputs.kube-namespace }} create configmap ${{ inputs.application-name }}-config \
+          --from-env-file=kubernetes/config/${{ inputs.kube-namespace }}/application.properties
+    - name: Update secrets
+      shell: bash
+      id: update-secrets
+      if: ${{ inputs.gpg-passphase != '' }}
+      run: >
+        echo ${{ inputs.gpg-passphase }} | gpg --batch --passphrase-fd 0 \
+          --output kubernetes/secrets/${{ inputs.kube-namespace }}/secrets.properties \
+          --decrypt kubernetes/secrets/${{ inputs.kube-namespace }}/secrets.properties.gpg
+        kubectl -n ${{ inputs.kube-namespace }} delete secret ${{ inputs.application-name }}-${{ inputs.kube-namespace }} --ignore-not-found
+        kubectl -n ${{ inputs.kube-namespace }} create secret generic ${{ inputs.application-name }}-${{ inputs.kube-namespace }} \
+          --from-env-file kubernetes/secrets/${{ inputs.kube-namespace }}/secrets.properties
+        rm kubernetes/secrets/${{ inputs.kube-namespace }}/secrets.properties
+    - name: Apply Deployment
+      shell: bash
+      run: kubectl -n ${{ inputs.kube-namespace }} apply -f deployment.yaml
+    - name: Apply Service
+      shell: bash
+      run: kubectl -n ${{ inputs.kube-namespace }} apply -f service.yaml
+    - name: Wait for Deployment
+      shell: bash
+      run: kubectl -n ${{ inputs.kube-namespace }} rollout status deployment/${{
+        inputs.application-name }} --timeout=${{ inputs.deploy-timeout }}s
