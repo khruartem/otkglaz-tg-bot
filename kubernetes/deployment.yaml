@@ -24,7 +24,7 @@ spec:
             memory: '512Mi'
         envFrom:
         - configMapRef:
-          name: ${APPLICATION_NAME}-config
+            name: ${APPLICATION_NAME}
         env:
           - name: TELEGRAM_BOT_TOKEN
             valueFrom:
