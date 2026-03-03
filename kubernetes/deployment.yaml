@@ -23,13 +23,18 @@ spec:
             cpu: '500m'
             memory: '512Mi'
         envFrom:
-          - configMapRef:
-            name: ${APPLICATION_NAME}-config
+        - configMapRef:
+          name: ${APPLICATION_NAME}-config
         env:
-          - name: secret_property
+          - name: TELEGRAM_BOT_TOKEN
             valueFrom:
               secretKeyRef:
                 name: ${APPLICATION_NAME}-${NAMESPACE}
-                key: secret_property
+                key: TELEGRAM_BOT_TOKEN
+          - name: ADMIN_CHAT_ID
+            valueFrom:
+              secretKeyRef:
+                name: ${APPLICATION_NAME}-${NAMESPACE}
+                key: ADMIN_CHAT_ID
         ports:
         - containerPort: 8080
